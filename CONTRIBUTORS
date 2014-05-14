@@ -1,0 +1,9 @@
+libvei CONTRIBUTORS file
+````````````````````````
+
+Keep track of code contributors, patches, bug fixes, and feature requests.
+
+Michael E. Locasto <locasto at ucalgary dot ca>
+ - wrote v1.2.0
+ - wrote n4ct tool
+ - wrote nech0 tool

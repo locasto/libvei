@@ -1,0 +1,9 @@
+http://www.gnu.org/s/libc/manual/html_node/Elapsed-Time.html
+
+http://www.manpagez.com/man/5/pcap-savefile/
+
+http://linux.die.net/man/3/pcap
+
+http://www.tcpdump.org/pcap.html
+
+http://hgesser.de/howto/static-link.html

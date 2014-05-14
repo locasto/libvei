@@ -1,0 +1,25 @@
+# Example injection script for use with nact (Network 4ct)
+#
+# Injection script files contain a set of commands that
+# control the *type* and *timing* of injection events to
+# pass to libvei.
+#
+# Injection scripts represent a timeline of actions.
+# Actions occur one per line.
+# Actions can be prefixed by an "actor" string, which
+# must be defined at the top of the file.
+# ACTOR a 
+# ACTOR b
+# b VEI_PING
+#
+# If no actors are defined, a single default actor is created.
+#
+# Action correspond to the names of pre-formulated "conversation"
+# types in LIBVEI.
+#
+# Actions also include "sleep" commands, which take a single argument,
+# the number of seconds to sleep.
+#
+VEI_PING;
+sleep 10;
+VEI_PING;

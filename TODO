@@ -1,0 +1,51 @@
+-add an offset to the libvei timestamps in the output file
+ tell libvei to rewrite output timestamps to "now"
+-make `inject_event' reentrant and thread-safe (as a callee)
+-create nroxy, listen for commands via port 3700
+-update libvei to write out to iface (Feb 1)
+
+=======================================================================
+ DONE BELOW HERE
+=======================================================================
+[DONE] v1.2.4
+-add some stub code for nroxy
+[DONE] v1.2.3
+-some code cleanup and error message cleanup
+-supply more/missing return value statements in vei_start_transcription
+-add nroxy file
+-add Makefile support for nroxy
+-add support for VEI_POST_JPG
+-create PCAP capture of netcat of JPG file
+-ask pcap to replay this file if seeing VEI_POST_JPG event
+-looked at sendip, dnet(8), and libdnet for packet construction
+[DONE] v1.2.2
+-add full support for static linking against pthread, dnet, and pcap
+-add objects/ directory for holding unarchived .a's of those libs
+[DONE] v1.2.1
+-add some support for static linking to the Makefile
+-add message about longest sleep interval
+-produce binaries to include with tarball
+[DONE] v1.2.0
+-define e_icmp_ping buffer / char array
+-build full support for injection
+-injection buffer type (type, header, packet) support
+-vei_pthread_sleep
+-use sched_yield
+-add some more assertions
+-move locking into correct positions (protect whole switch..case)
+-don't use pthread_join
+-handle setting "correct" timestamp in injected packet (look @ last replay)
+[DONE] v1.1.1
+-injection framework (pthreads, etc.)
+-use dnet tool for ICMP bytes
+-output progress indicator for replay
+-introduce nact tool
+-injection thread for nact tool
+[DONE] v1.0.0
+-add new sample tool, nact
+-finish locking scheme
+-use pcap to open files
+-use pcap to replay packets to output dump file
+-get delays/timelines to match up b/c pcap_loop just quickly loops
+ solution: need to read packet savefile metadata (times) and delay
+ that amount of time

@@ -1,0 +1,196 @@
+libvei: Virtual Network Event Injection Service Library
+``````````````````````````````````````````````````````` 
+
+How do you merge dynamically-generated network packets from an
+event-driven process (such as a user, a video game, or Virtual Reality
+simulator) into an existing background trace for replay on some
+"virtual" network (i.e., into packet capture files or real interfaces
+and other software that might monitor those resources)?
+
+Existing network packet manipulation tools (including those that talk
+to the network via the OS, hardware network interfaces, and/or pcap
+files) typically do not handle input from sources that are not (1) the
+network interface itself (2) packet capture files or (3) raw sockets
+(and the attendent libraries that provide interfaces to these
+constructs). For example, if one wanted to merge a background traffic
+tracefile with actual network events produced by avatars in a virtual
+world or video game, no tool exists to provide this functionality.
+
+[What About Mergecap and/or TCPREPLAY?]
+
+Things like mergecap and tcpreplay are typically suited for
+manipulating multiple existing pcap files and sending them out on the
+wire (or to another pcap file), but not for merging asynchronous
+events into an existing trace (as far as I can tell,
+tcprewrite/tcpreplay-edit only act as a *filter* by rewriting fields
+in the existing packet trace, not merging externally-generated
+packets). 
+
+The problem with mergecap is that it relies on the timeline
+defined in the pcap files to merge -- since asynchronous,
+dynamically-generated packets from an external process will occur at
+quite a different time than the original "background" pcap file, the
+result will be the moral equivalent of appending the new packets to
+the end of the background pcap file rather than interspersing the two.
+In essence, no tool exists that overlays two timelines (1) the
+injection timeline/script with (2) the pre-existing background trace
+file timeline to formulate a third combined timeline. We can't pretend
+that packets occurring now actually occurred some time ago.
+
+While low-level programmatic manipulation is possible, existing packet
+formulation libraries and tools (e.g., dnet, libpcap, sendip, hping)
+tend to be quite low-level in that they do not provide the exact type
+of interface we're looking for. But they do provide a basis for
+implementing one.
+
+The key challenge is to provide a programmable interface to create and
+inject custom packets (or pre-recorded conversations/phrases/flows of
+packets) _from_a_program_ into a real network, a pcap file, or a
+network interface (e.g., eth0). Tools like scapy and NetworkExpect
+approach this ideal, but would still need a shim to work with programs
+written in C/C++ or Java (i.e., I could write a python script that
+uses scapy to inject packets, but my python-fu is lacking).
+
+libvei provides an C-language API for injecting asynchronous network
+events into an existing pcap trace file that is being replayed at
+realtime speed (i.e., the speed/rates/intervals at which the
+background traffic was originally recorded). libvei enables the
+merging or weaving in of this new traffic with the old background
+traffic in a serialized fashion.
+
+The VEI API provides a set of functions for constructing
+pre--determined packet and flow types and injecting them into an
+existing TCP/IP network data trace. The latter half of this
+functionality can be accomplished two ways:
+
+ o  directly by this API (done with help from libdnet and libpcap)
+
+ o  indirectly by writing these packets to another interface
+    and having scapy (or a tool like it, i.e., NetworkExpect)
+    sniff this interface and combine the packets with an
+    existing trace file that it has loaded
+
+The API exposes two levels of control:
+
+ o  injection of custom, pre-determined high-level network events, such as
+    -  an HTTP request
+    -  an email message
+    -  a DNS request / lookup
+    -  a VOIP call
+    -  a twitter post
+    -  an RSS feed fetch
+    -  a network-level scan of a target IP address
+    -  among others...
+
+ o  injection of custom packets  (unsupported as of now, since existing
+    tools such as sendip and scapy do this pretty^H^H^H^H^H^H very well).
+     
+
+The current development priority is on the first level of control.
+
+The main purpose of this control level is to insert pre-determined
+artifacts (in essence, pre-defined packet sequences) into an arbitrary
+network trace file. The library performs limited customization,
+limited "fixup", and almost no semantic or logical-level
+synchronization of the injected sequence to the "background" sequence.
+For example, the subject network trace file may have been produced by
+a tcpdump filter specifying that only packets to or from a specific
+host be captured; the library allows packets destined to or
+originating from other hosts to be injected into this trace. The
+library is a tool, and it can be abused. One should understand the
+semantics and implications of injecting certain packet sequences
+relative to the "background" subject file: it is possible to insert
+packets that would never realistically appear in the "pristine" trace
+file, including packets that would otherwise contradict the existence
+of sets of packets from the pristine trace.
+
+The main output of the library is a new network trace file containing
+both the background subject file and the injected packet sequences.
+
+There are really cool consequences or outcomes to this capability. For
+example, one can now program game scenarios that incorporate the
+operations and activities of a virtual TCP/IP network, such that these
+actions and events can become part of game play; an avatar can walk up
+to a terminal and initiate an nmap scan *that occurs in the real world*.
+
+Right now, of course, this traffic winds up in a pcap file, not out on
+the 'net. But it's a simple matter of adding support for writing to a
+network interface and interpreting the received traffic...
+
+Related Tools
+=============
+
+libpcap
+tcpdump
+wireshark
+mergecap
+libdnet
+libnet
+Ettercap
+scapy
+hping
+NetworkExpect
+tcpreplay / tcpreplay-edit
+dsniff
+dnet(8)
+
+
+
+
+--------------------------------------------------------------------------
+ brainstorming below here...for the current API, see include/vei.h
+--------------------------------------------------------------------------
+
+Services:
+
+initialize_library(FILE net_trace);
+
+Tell the library to modify this data file. Library produces a new
+file according to default parameters: `net_trace'.prime
+
+initialize_library(FILE net_trace,
+                   FILE event_file);
+
+A client of the library can hand the library a handle to a specific 
+tcpdump file and a handle to a set of encoded events; the latter file
+contains data in a format described below.
+
+inject_event(EVENT_TYPE e);
+
+This function provides an entry point to the library whereby clients
+can ask libvenis to inject a pre-defined event at that point in time.
+Function assumes libvenis has been interally "replaying" the packets
+into the target output file; libvenis then produces a new set of packets
+corresponding to this event and places them in the output file. It then
+continues replaying (with adjusted timestamps, flags, etc.)
+
+inject_event(EVENT_TYPE e, EVENT_PARAMS p);
+
+Allows some customization. For example, the "twitter" event type
+can be customized to issue a tweet to a particular URL rather than
+the default one. The "scan" event type includes a parameter for the
+specific IP address or network address range to scan. A basic HTTP
+request can have arbitrary packet payload content as a parameter
+(just a different byte array) -- this can be used to simulate code
+injection or worm infection attempt, along with things like SQL
+injection.
+
+inject_packet(PACKET p);
+
+unimplemented; placeholder for injecting a custom packet
+
+--------------------------------------------------------------------------
+
+EVENT_TYPE defintion
+
+plain HTTP Request; normal content
+plain DNS lookup request
+HTTP twitter post
+TCP scan
+SYN scan
+email message
+RSS fetch/poll
+VOIP call / SIP initiation handshake
+SSH handshake
+SSL handshake
+
